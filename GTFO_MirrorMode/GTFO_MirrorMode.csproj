@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../ManifestInfo.props"/>
+
+    <Import Project="../BuildHelper.props"/>
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>Latest</LangVersion>
+
+        <AssemblyName>MirrorMode</AssemblyName>
+        <RootNamespace>$(MSBuildProjectName.Replace(".", "_").Replace(" ", "_").Replace("GTFO_", ""))</RootNamespace>
+
+        <ImplicitUsings>disable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+
+        <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+        <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+        <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$(TargetFramework.StartsWith('Framework_Her'))">
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Update="Resources\Data.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Data.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Resources\Data.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Data.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
+</Project>

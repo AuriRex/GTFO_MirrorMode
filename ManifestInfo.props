@@ -1,0 +1,14 @@
+<Project>
+    <PropertyGroup>
+        <TSName>MirrorMode</TSName>
+        <TSAuthor>AuriRex</TSAuthor>
+        <TSVersion>0.0.1</TSVersion> <!-- TSVersion empty = GitInfo used instead (if available; check nuget) -->
+        <TSWebsite>https://github.com/Link/To/Repo/</TSWebsite>
+        <TSDescription>Description</TSDescription>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- Add the Dependency strings here, one for each dependency -->
+        <TSDependencyStrings Include="BepInEx-BepInExPack_GTFO-3.2.2" InProject="false" />
+        <!-- <TSDependencyStrings Include="Some-Other-Dependency-1.2.3" InProject="false" /> -->
+    </ItemGroup>
+</Project>
