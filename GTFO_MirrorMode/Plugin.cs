@@ -65,7 +65,7 @@ public class Plugin : BasePlugin
 
     public static void SetGUIRootMirrored(bool active)
     {
-        GuiManager.Current.m_root.localScale = new Vector3(active ? -1 : 1, 1, 1);
+        GuiManager.Current.m_root.localScale = active ? Patches.INVERT_X : Vector3.one;
     }
     
     private static void TryLoadMaterial()

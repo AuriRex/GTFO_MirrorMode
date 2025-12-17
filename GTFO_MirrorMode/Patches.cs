@@ -1,4 +1,6 @@
+using CellMenu;
 using GameData;
+using Gear;
 using HarmonyLib;
 using LevelGeneration;
 using UnityEngine;
@@ -74,24 +76,158 @@ public class Patches
     {
         public static void Postfix(FocusStateManager __instance, eFocusState state)
         {
+            GuiManager.WatermarkLayer.CanvasTrans.localScale = Vector3.one;
+            
             switch (state)
             {
                 case eFocusState.FPS:
                 case eFocusState.FPS_CommunicationDialog:
+                case eFocusState.FPS_TypingInChat:
                 case eFocusState.InElevator:
                 case eFocusState.ComputerTerminal:
                     Plugin.SetGUIRootMirrored(true);
-                    // Idk, the setup patch doesn't seem to work >->
-                    GuiManager.NavMarkerLayer.GuiLayerBase.transform.localScale = INVERT_X;
                     break;
+                case eFocusState.Map:
+                    var map = CM_PageMap.Current;
+                    map.m_cursor.transform.localScale = INVERT_X;
+                    map.m_staticContentHolder.localScale = INVERT_X;
+                    foreach (var syncedPlayer in map.m_syncedPlayers)
+                    {
+                        // shrug
+                        syncedPlayer.transform.localScale = INVERT_X;
+                    }
+                    GuiManager.WatermarkLayer.CanvasTrans.localScale = INVERT_X;
+                    goto default;
                 default:
                     Plugin.SetGUIRootMirrored(false);
-                    GuiManager.NavMarkerLayer.GuiLayerBase.transform.localScale = Vector3.one;
                     break;
             }
         }
     }
 
+    [HarmonyPatch(typeof(EnemyScannerGraphics), nameof(EnemyScannerGraphics.Start))]
+    public static class EnemyScannerGraphics__Start__Patch
+    {
+        // Flip bio-tracker dots display
+        public static void Postfix(EnemyScannerGraphics __instance)
+        {
+            var displayTrans = __instance.m_display.transform;
+
+            if (displayTrans.localScale.x < 0)
+                return;
+            
+            displayTrans.localScale = CompMult(displayTrans.localScale, INVERT_X);
+        }
+    }
+    
+    [HarmonyPatch(typeof(SentryGunScreen), nameof(SentryGunScreen.SetAmmo))]
+    public static class SentryGunScreen__SetAmmo__Patch
+    {
+        public static void Postfix(SentryGunScreen __instance)
+        {
+            if (__instance == null || __instance.transform == null)
+                return;
+
+            if (__instance.GetComponentInParent<SentryGunFirstPerson>() != null)
+            {
+                __instance.transform.localScale = Vector3.one;
+                return;
+            }
+            
+            __instance.transform.localScale = INVERT_X;
+        }
+    }
+    
+    [HarmonyPatch(typeof(GameStateManager), nameof(GameStateManager.DoChangeState))]
+    public static class GameStateManager__DoChangeState__Patch
+    {
+        public static void Postfix(GameStateManager __instance, eGameStateName nextState)
+        {
+            if (nextState != eGameStateName.InLevel)
+                return;
+            
+            FlipMapIcons();
+        }
+
+        private static void FlipMapIcons()
+        {
+            var map = CM_PageMap.Current;
+
+            var elevatorGui = CM_PageMap.m_mapMoverElementsRoot?.transform.Find("CM_MapElevator(Clone)");
+            if (elevatorGui != null)
+            {
+                elevatorGui.localScale = INVERT_X;
+            }
+            
+            foreach (var zoneGui in map.m_zoneGUI)
+            {
+                foreach (var areaGui in zoneGui.m_areaGUIs)
+                {
+                    FlipGuiItems(areaGui.m_signGUIs);
+                    FlipGuiItems(areaGui.m_computerTerminalGUIs);
+                    FlipGuiItems(areaGui.m_doorGUIs);
+                    FlipGuiItems(areaGui.m_bulkheadDoorControllerGUIs);
+                }
+                //zoneGui.transform.localScale = INVERT_X;
+            }
+
+            return;
+
+            void FlipGuiItems(Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<CM_SyncedGUIItem> items)
+            {
+                foreach (var item in items)
+                {
+                    item.transform.localScale = CompMult(item.transform.localScale, INVERT_X);
+                }
+            }
+        }
+    }
+    
+    [HarmonyPatch(typeof(GuiManager), nameof(GuiManager.ScreenToGUIScaled))]
+    public static class GuiManager__ScreenToGUIScaled__Patch
+    {
+        public static void Postfix(GuiManager __instance, ref Vector3 __result)
+        {
+            switch (FocusStateManager.CurrentState)
+            {
+                case eFocusState.FPS:
+                case eFocusState.FPS_CommunicationDialog:
+                case eFocusState.FPS_TypingInChat:
+                case eFocusState.InElevator:
+                case eFocusState.Map:
+                    break;
+                default:
+                    return;
+            }
+            
+            __result.x *= -1;
+        }
+    }
+    
+    [HarmonyPatch(typeof(AkGameObj), nameof(AkGameObj.Update))]
+    public static class AkGameObj__Update__Patch
+    {
+        private const string GAMEOBJECT_NAME_FILTER = "FPSLookCamera";
+        
+        // This does seem to work to properly flip the audio by essentially
+        // flipping the player backwards as much as the audio engine is concerned,
+        // although I am unsure if this has any noticeable impact on audio ...
+        public static void Postfix(AkGameObj __instance)
+        {
+            if (__instance.name != GAMEOBJECT_NAME_FILTER)
+                return;
+
+            var transform = __instance.transform;
+            var position = transform.position;
+            var forward = transform.forward * -1;
+            
+            AkSoundEngine.SetObjectPosition(__instance.gameObject,
+                position.x, position.y, position.z,
+                forward.x, forward.y, forward.z,
+                transform.up.x, transform.up.y, transform.up.z);
+        }
+    }
+    
     [HarmonyPatch(typeof(LG_ComputerTerminal), nameof(LG_ComputerTerminal.Setup))]
     public static class LG_ComputerTerminal__Setup__Patch
     {
