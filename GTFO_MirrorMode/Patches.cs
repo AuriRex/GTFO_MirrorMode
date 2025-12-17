@@ -59,6 +59,40 @@ public static class Patches
         }
     }
 
+    [HarmonyPatch(typeof(CM_PageObjectives), nameof(CM_PageObjectives.OnEnable))]
+    public static class CM_PageObjectives__OnEnable__Patch
+    {
+        private static bool _first = true;
+        public static void Postfix(CM_PageObjectives __instance)
+        {
+            if (_first)
+            {
+                _first = false;
+                return;
+            }
+            
+            Plugin.SetGUIRootMirrored(true);
+            GuiManager.WatermarkLayer.CanvasTrans.localScale = Vector3.one;
+        }
+    }
+    
+    [HarmonyPatch(typeof(CM_PageMap), nameof(CM_PageMap.OnEnable))]
+    public static class CM_PageMap__OnEnable__Patch
+    {
+        private static bool _first = true;
+        public static void Postfix(CM_PageMap __instance)
+        {
+            if (_first)
+            {
+                _first = false;
+                return;
+            }
+            
+            Plugin.SetGUIRootMirrored(false);
+            GuiManager.WatermarkLayer.CanvasTrans.localScale = INVERT_X;
+        }
+    }
+    
     [HarmonyPatch(typeof(FocusStateManager), nameof(FocusStateManager.ChangeState))]
     public static class FocusStateManager__ChangeState__Patch
     {
@@ -84,8 +118,9 @@ public static class Patches
                         // shrug
                         syncedPlayer.transform.localScale = INVERT_X;
                     }
-                    GuiManager.WatermarkLayer.CanvasTrans.localScale = INVERT_X;
-                    goto default;
+                    if (CM_PageMap.Current.isActiveAndEnabled)
+                        GuiManager.WatermarkLayer.CanvasTrans.localScale = INVERT_X;
+                    break;
                 default:
                     Plugin.SetGUIRootMirrored(false);
                     break;
@@ -294,7 +329,11 @@ public static class Patches
                 case eFocusState.FPS:
                 case eFocusState.FPS_CommunicationDialog:
                 case eFocusState.InElevator:
+                    break;
                 case eFocusState.Map:
+                    // FocusState Map but map not enabled -> objectives screen
+                    if (!CM_PageMap.Current.isActiveAndEnabled)
+                        return;
                     break;
                 default:
                     return;
