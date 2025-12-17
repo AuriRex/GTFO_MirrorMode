@@ -13,49 +13,12 @@ public static class Patches
 {
     public static Vector3 INVERT_X = new Vector3(-1, 1, 1);
     
-    [HarmonyPatch(typeof(GameDataInit), nameof(GameDataInit.Initialize))]
-    public static class GameDataInit__Initialize__Patch
-    {
-        private static bool _first = true;
-
-        public static void Postfix()
-        {
-            if (!_first)
-                return;
-            
-            _first = false;
-
-            Plugin.OnGameInit();
-        }
-    }
-
-    [HarmonyPatch(typeof(CM_Camera), nameof(CM_Camera.Awake))]
-    public static class CM_Camera__Awake__Patch
-    {
-        public static void Postfix(CM_Camera __instance)
-        {
-            Plugin.ApplyShaderTo(__instance);
-            Plugin.SetMenuMirror(false);
-            Plugin.SetGUIRootMirrored(false);
-        }
-    }
-    
     [HarmonyPatch(typeof(FPSCamera), nameof(FPSCamera.Setup), [])]
     public static class FPSCamera__Setup__Patch
     {
         public static void Postfix(FPSCamera __instance)
         {
             Plugin.ApplyShaderTo(__instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(NavMarkerLayer), nameof(NavMarkerLayer.Setup), [typeof(Transform), typeof(string)])]
-    public static class NavMarkerLayer__Setup__Patch
-    {
-        public static void Postfix(NavMarkerLayer __instance)
-        {
-            // Invert Nav Markers
-            __instance.GuiLayerBase.transform.localScale = INVERT_X;
         }
     }
 
@@ -201,7 +164,6 @@ public static class Patches
                     FlipGuiItems(areaGui.m_doorGUIs);
                     FlipGuiItems(areaGui.m_bulkheadDoorControllerGUIs);
                 }
-                //zoneGui.transform.localScale = INVERT_X;
             }
 
             return;
@@ -284,7 +246,6 @@ public static class Patches
         public static void Postfix(LG_Sign __instance)
         {
             __instance.m_text.transform.localScale = Vector3.Scale(__instance.m_text.transform.localScale, INVERT_X);
-            //__instance.transform.localScale = INVERT_X;
         }
     }
     
