@@ -1,10 +1,10 @@
 <Project>
     <PropertyGroup>
-        <TSName>MirrorMode</TSName>
+        <TSName>Mirror_Mode</TSName>
         <TSAuthor>AuriRex</TSAuthor>
-        <TSVersion>0.0.1</TSVersion> <!-- TSVersion empty = GitInfo used instead (if available; check nuget) -->
-        <TSWebsite>https://github.com/Link/To/Repo/</TSWebsite>
-        <TSDescription>Description</TSDescription>
+        <TSVersion>1.0.0</TSVersion> <!-- TSVersion empty = GitInfo used instead (if available; check nuget) -->
+        <TSWebsite>https://github.com/AuriRex/GTFO_MirrorMode/</TSWebsite>
+        <TSDescription>GTFO but the levels are flipped!</TSDescription>
     </PropertyGroup>
     <ItemGroup>
         <!-- Add the Dependency strings here, one for each dependency -->
