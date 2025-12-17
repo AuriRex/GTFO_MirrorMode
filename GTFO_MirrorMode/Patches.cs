@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace MirrorMode;
 
-public class Patches
+public static class Patches
 {
     public static Vector3 INVERT_X = new Vector3(-1, 1, 1);
  
@@ -19,7 +19,7 @@ public class Patches
     }
     
     [HarmonyPatch(typeof(GameDataInit), nameof(GameDataInit.Initialize))]
-    public static class InitPatch
+    public static class GameDataInit__Initialize__Patch
     {
         private static bool _first = true;
 
@@ -53,15 +53,6 @@ public class Patches
             Plugin.ApplyShaderTo(__instance);
         }
     }
-    
-    // [HarmonyPatch(typeof(GuiManager), nameof(GuiManager.Setup))]
-    // public static class GuiManager__Setup__Patch
-    // {
-    //     public static void Postfix(GuiManager __instance)
-    //     {
-    //         __instance.m_root.localScale = new Vector3(-1, 1, 1);
-    //     }
-    // }
 
     [HarmonyPatch(typeof(NavMarkerLayer), nameof(NavMarkerLayer.Setup), [typeof(Transform), typeof(string)])]
     public static class NavMarkerLayer__Setup__Patch
@@ -149,17 +140,6 @@ public class Patches
                 return;
             
             FlipMapIcons();
-            
-            var bp = PlayerBackpackManager.GetBackpack(SNet.LocalPlayer);
-
-            foreach (var bpItem in bp.BackpackItems)
-            {
-                if (bpItem.Instance == null)
-                    continue;
-                
-                //Plugin.L.LogWarning($"Setting scale of {bpItem.Instance.name} ...");
-                bpItem.Instance.transform.localScale = Vector3.one;
-            }
         }
 
         private static void FlipMapIcons()
@@ -267,19 +247,6 @@ public class Patches
             serial.localScale = CompMult(serial.localScale, INVERT_X);
         }
     }
-    
-    // [HarmonyPatch(typeof(GUIX_VirtualScene), nameof(GUIX_VirtualScene.Start))]
-    // public static class GUIX_VirtualScene__Start__Patch
-    // {
-    //     public static void Postfix(GUIX_VirtualScene __instance)
-    //     {
-    //         if (!__instance.name.ToLower().Contains("terminal"))
-    //             return;
-    //         
-    //         __instance.gameObject.transform.localScale = new Vector3(-1, 1, 1);
-    //         __instance.gameObject.transform.localPosition = new Vector3(-2.725f, 0, 0);
-    //     }
-    // }
 
     [HarmonyPatch(typeof(LG_Sign), nameof(LG_Sign.SetZoneInfo))]
     public static class LG_Sign__SetZoneInfo__Patch
@@ -292,7 +259,7 @@ public class Patches
     }
     
     [HarmonyPatch(typeof(LG_Door_Sync), nameof(LG_Door_Sync.Setup))]
-    public static class DoorPatch
+    public static class LG_Door_Sync__Setup__Patch
     {
         public static void Postfix(LG_Door_Sync __instance)
         {
@@ -320,7 +287,7 @@ public class Patches
     }
     
     [HarmonyPatch(typeof(InputMapper), nameof(InputMapper.DoGetAxis))]
-    public static class InputMapperPatch
+    public static class InputMapper__DoGetAxis__Patch
     {
         public static void Postfix(InputMapper __instance, InputAction action, ref float __result)
         {
@@ -341,32 +308,6 @@ public class Patches
             __result *= -1;
         }
     }
-    
-    
-    /*
-     *
-    public void SetLeftArmTargetPosRot(Transform targetTrans)
-	{
-		if (targetTrans != null)
-		{
-			this.m_tempRot = targetTrans.rotation;
-			this.m_tempRot *= Quaternion.Euler(this.m_leftHandIKRotOffset);
-			this.m_leftHandIKTarget.SetPositionAndRotation(targetTrans.position + targetTrans.right * this.m_leftHandIKPosOffset.x + targetTrans.up * this.m_leftHandIKPosOffset.y + targetTrans.forward * this.m_leftHandIKPosOffset.z, this.m_tempRot);
-		}
-	}
-
-	// Token: 0x060006D4 RID: 1748 RVA: 0x0006090C File Offset: 0x0005EB0C
-	public void SetRightArmTargetPosRot(Transform targetTrans)
-	{
-		if (targetTrans != null)
-		{
-			this.m_tempRot = targetTrans.rotation;
-			this.m_tempRot *= Quaternion.Euler(this.m_rightHandIKRotOffset);
-			this.m_rightHandIKTarget.SetPositionAndRotation(targetTrans.position + targetTrans.right * this.m_rightHandIKPosOffset.x + targetTrans.up * this.m_rightHandIKPosOffset.y + targetTrans.forward * this.m_rightHandIKPosOffset.z, this.m_tempRot);
-		}
-	}
-     * 
-     */
 
     #region LEFT_HANDED_MODE_VIEWMODEL
     [HarmonyPatch(typeof(FirstPersonItemHolder), nameof(FirstPersonItemHolder.Setup))]
@@ -375,6 +316,21 @@ public class Patches
         public static void Postfix(FirstPersonItemHolder __instance)
         {
             __instance.transform.localScale = INVERT_X;
+            
+            // We have to reset the scale on our items/weapons or else
+            // the IK breaks for our first-person hands
+            // The FPIH gets destroyed with the actual weapons inheriting the -1 scale
+            // on the X axis after being un-parented from the FPIH
+            var bp = PlayerBackpackManager.GetBackpack(SNet.LocalPlayer);
+
+            foreach (var bpItem in bp.BackpackItems)
+            {
+                if (bpItem.Instance == null)
+                    continue;
+                
+                //Plugin.L.LogWarning($"Setting scale of {bpItem.Instance.name} ...");
+                bpItem.Instance.transform.localScale = Vector3.one;
+            }
         }
     }
     
