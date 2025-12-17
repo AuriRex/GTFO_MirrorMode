@@ -12,11 +12,6 @@ namespace MirrorMode;
 public static class Patches
 {
     public static Vector3 INVERT_X = new Vector3(-1, 1, 1);
- 
-    private static Vector3 CompMult(Vector3 orig, Vector3 mult)
-    {
-        return new Vector3(orig.x * mult.x, orig.y * mult.y, orig.z * mult.z);
-    }
     
     [HarmonyPatch(typeof(GameDataInit), nameof(GameDataInit.Initialize))]
     public static class GameDataInit__Initialize__Patch
@@ -109,7 +104,7 @@ public static class Patches
             if (displayTrans.localScale.x < 0)
                 return;
             
-            displayTrans.localScale = CompMult(displayTrans.localScale, INVERT_X);
+            displayTrans.localScale = Vector3.Scale(displayTrans.localScale, INVERT_X);
         }
     }
     
@@ -180,7 +175,7 @@ public static class Patches
             {
                 foreach (var item in items)
                 {
-                    item.transform.localScale = CompMult(item.transform.localScale, INVERT_X);
+                    item.transform.localScale = Vector3.Scale(item.transform.localScale, INVERT_X);
                 }
             }
         }
@@ -243,8 +238,8 @@ public static class Patches
 
             var serial = __instance.m_serial.transform;
             
-            serial.localPosition = CompMult(serial.localPosition, INVERT_X);
-            serial.localScale = CompMult(serial.localScale, INVERT_X);
+            serial.localPosition = Vector3.Scale(serial.localPosition, INVERT_X);
+            serial.localScale = Vector3.Scale(serial.localScale, INVERT_X);
         }
     }
 
@@ -253,7 +248,7 @@ public static class Patches
     {
         public static void Postfix(LG_Sign __instance)
         {
-            __instance.m_text.transform.localScale = CompMult(__instance.m_text.transform.localScale, INVERT_X);
+            __instance.m_text.transform.localScale = Vector3.Scale(__instance.m_text.transform.localScale, INVERT_X);
             //__instance.transform.localScale = INVERT_X;
         }
     }
@@ -280,7 +275,7 @@ public static class Patches
 
                 foreach (var box in boxes)
                 {
-                    box.transform.localScale = CompMult(box.transform.localScale, INVERT_X);
+                    box.transform.localScale = Vector3.Scale(box.transform.localScale, INVERT_X);
                 }
             }
         }
