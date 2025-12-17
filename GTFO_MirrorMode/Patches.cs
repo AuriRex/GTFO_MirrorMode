@@ -3,6 +3,8 @@ using GameData;
 using Gear;
 using HarmonyLib;
 using LevelGeneration;
+using Player;
+using SNetwork;
 using UnityEngine;
 
 namespace MirrorMode;
@@ -147,16 +149,37 @@ public class Patches
                 return;
             
             FlipMapIcons();
+            
+            var bp = PlayerBackpackManager.GetBackpack(SNet.LocalPlayer);
+
+            foreach (var bpItem in bp.BackpackItems)
+            {
+                if (bpItem.Instance == null)
+                    continue;
+                
+                //Plugin.L.LogWarning($"Setting scale of {bpItem.Instance.name} ...");
+                bpItem.Instance.transform.localScale = Vector3.one;
+            }
         }
 
         private static void FlipMapIcons()
         {
             var map = CM_PageMap.Current;
 
-            var elevatorGui = CM_PageMap.m_mapMoverElementsRoot?.transform.Find("CM_MapElevator(Clone)");
-            if (elevatorGui != null)
+            var mapMoverElementsRootTrans = CM_PageMap.m_mapMoverElementsRoot?.transform;
+
+            if (mapMoverElementsRootTrans != null)
             {
-                elevatorGui.localScale = INVERT_X;
+                for (var i = 0; i < mapMoverElementsRootTrans.childCount; i++)
+                {
+                    var child =  mapMoverElementsRootTrans.GetChild(i);
+                    
+                    // Dimensions have their own 'E' it seems :p
+                    if (!child.name.StartsWith("CM_MapElevator(Clone)"))
+                        continue;
+                    
+                    child.localScale = INVERT_X;
+                }
             }
             
             foreach (var zoneGui in map.m_zoneGUI)
